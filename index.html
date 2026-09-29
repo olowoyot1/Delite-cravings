@@ -19,7 +19,7 @@ main{max-width:1500px;margin:auto;padding:18px 20px}.toolbar{display:flex;gap:8p
 <div class="login-card"><div class="brand">DC</div><h1>Delite Cravings</h1><p>Sales & inventory management</p>
 <div class="field"><label>Username</label><input id="loginUser" autocomplete="username" placeholder="Enter username"></div>
 <div class="field"><label>PIN</label><input id="loginPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="••••"></div>
-<div class="login-error" id="loginError"></div><button class="dark" style="width:100%" id="loginBtn">Sign in</button>
+<div class="login-error" id="loginError"></div><button type="button" class="dark" style="width:100%" id="loginBtn" onclick="window.deliteLogin()">Sign in</button>
 <p class="help" style="margin-top:16px">First login? Default account is <b>admin</b> / <b>1234</b>. Change it after signing in.</p></div></div>
 
 <div id="app">
@@ -53,6 +53,23 @@ main{max-width:1500px;margin:auto;padding:18px 20px}.toolbar{display:flex;gap:8p
 </main></div><div id="toast" class="toast"></div>
 
 <script>
+(function(){
+  function dcLogin(){
+    var a=JSON.parse(localStorage.getItem('delite_cravings_auth_v1')||'null')||{username:'admin',pin:'1234'};
+    var u=(document.getElementById('loginUser').value||'').trim();
+    var p=(document.getElementById('loginPin').value||'').trim();
+    var err=document.getElementById('loginError');
+    if(u===a.username && p===a.pin){
+      sessionStorage.setItem('dc_logged_in','1');
+      document.getElementById('login').style.display='none';
+      document.getElementById('app').style.display='block';
+      location.reload();
+    }else if(err){err.textContent='Incorrect username or PIN.';}
+  }
+  window.deliteLogin=dcLogin;
+})();
+</script>
+<script>
 const KEY='delite_cravings_products_v3',DAY='delite_cravings_days_v3',AUTH='delite_cravings_auth_v1';
 const today=()=>new Date().toISOString().slice(0,10);let date=today();
 let products=JSON.parse(localStorage.getItem(KEY)||'null')||[
@@ -82,7 +99,7 @@ const cat={};vals.forEach(v=>products.forEach(p=>{const c=calc(p,v.d);cat[p.cate
 function rangeDates(from,to){const a=[];let d=new Date(from+'T00:00:00'),end=new Date(to+'T00:00:00');while(d<=end){a.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1)}return a}
 function renderCustomReport(){const from=document.getElementById('reportFrom').value,to=document.getElementById('reportTo').value,box=document.getElementById('customReport');if(!from||!to||from>to){box.style.display='none';return}const ds=rangeDates(from,to),tot=ds.reduce((x,d)=>{const s=summary(d);x.sales+=s.sales;x.sold+=s.sold;x.added+=s.added;x.closing+=s.closing;return x},{sales:0,sold:0,added:0,closing:0});const prod={};ds.forEach(d=>products.forEach(p=>{const c=calc(p,d);if(c.sales||c.s)prod[p.name]=(prod[p.name]||0)+c.sales}));const top=Object.entries(prod).sort((a,b)=>b[1]-a[1]).slice(0,10);box.style.display='block';box.innerHTML='<h3 style="margin-top:0">Report: '+from+' to '+to+'</h3><div class="grid analytics"><div class="card metric"><small>Total Sales</small><strong>'+fmt(tot.sales)+'</strong></div><div class="card metric"><small>Units Sold</small><strong>'+tot.sold.toLocaleString()+'</strong></div><div class="card metric"><small>Stock Added</small><strong>'+tot.added.toLocaleString()+'</strong></div><div class="card metric"><small>Days</small><strong>'+ds.length+'</strong></div></div><h3>Top Products</h3><div class="history-list">'+(top.map((x,i)=>'<div class="history-row"><b>'+(i+1)+'. '+esc(x[0])+'</b><strong>'+fmt(x[1])+'</strong></div>').join('')||'<div class="empty">No sales recorded for this period.</div>')+'</div>'}
 function renderReports(){const ds=Object.keys(days()).sort().reverse();const h=document.getElementById('history');h.innerHTML=ds.map(d=>{const s=summary(d);return '<div class="history-row"><div><b>'+new Date(d+'T00:00:00').toLocaleDateString('en-NG',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+'</b><div class="help">'+s.sold+' units sold · '+s.closing+' closing</div></div><strong>'+fmt(s.sales)+'</strong><button data-open="'+d+'">Open</button></div>'}).join('')||'<div class="empty">No saved daily reports yet. Complete a day and it will appear here.</div>';document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{date=b.dataset.open;document.getElementById('date').value=date;showTab('sales');renderSales()}));const from=document.getElementById('reportFrom'),to=document.getElementById('reportTo');if(!from.value)from.value=ds[ds.length-1]||today();if(!to.value)to.value=date;renderCustomReport()}
-function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('.section').forEach(sec=>sec.classList.toggle('active',sec.id===name));if(name==='analytics')renderAnalytics();if(name==='reports')renderReports();}\ndocument.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('.section').forEach(sec=>sec.classList.toggle('active',sec.id===name));if(name==='analytics')renderAnalytics();if(name==='reports')renderReports();}\ndocument.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',function(e){e.preventDefault();showTab(this.dataset.tab)}));
 document.getElementById('date').value=date;document.getElementById('date').addEventListener('change',e=>{date=e.target.value||today();renderSales()});
 document.getElementById('analyticsRange').addEventListener('change',renderAnalytics);document.getElementById('generateReport').addEventListener('click',renderCustomReport);document.getElementById('reportFrom').addEventListener('change',renderCustomReport);document.getElementById('reportTo').addEventListener('change',renderCustomReport);document.getElementById('exportCustom').addEventListener('click',()=>{const f=document.getElementById('reportFrom').value,t=document.getElementById('reportTo').value;if(!f||!t||f>t)return toast('Select a valid report period');const rows=exportRows(rangeDates(f,t)),csv=rows.map(r=>r.map(x=>{const z=String(x??'');return /[",\n]/.test(z)?'"'+z.replace(/"/g,'""')+'"':z}).join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Delite-Cravings-'+f+'-to-'+t+'.csv';a.click()});
 document.getElementById('addProduct').addEventListener('click',addProduct);
