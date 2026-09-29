@@ -1,128 +1,102 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Delite Cravings — Daily Sales & Stock</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Delite Cravings — Sales & Stock</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--brand:#f59e0b;--dark:#171717;--muted:#737373;--bg:#f7f7f5;--card:#fff;--line:#e5e5e5;--green:#15803d;--red:#b91c1c}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:#171717}
-header{background:linear-gradient(135deg,#171717,#292524);color:#fff;padding:24px 20px}header .wrap{max-width:1400px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{margin:0;font-size:26px}header p{margin:5px 0 0;color:#d4d4d4}.logo{font-size:34px;font-weight:900;color:var(--brand)}
-main{max-width:1400px;margin:22px auto;padding:0 20px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}.tabs{display:flex;gap:6px;flex-wrap:wrap}.tab,button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}button.primary{background:var(--brand);border-color:var(--brand);color:#171717}button.danger{color:var(--red)}input,select{width:100%;border:1px solid #d4d4d4;border-radius:8px;padding:8px 9px;background:#fff;font:inherit}input:focus,select:focus{outline:2px solid #fde68a;border-color:var(--brand)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #00000008}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.metric small{display:block;color:var(--muted);font-weight:700}.metric strong{display:block;font-size:24px;margin-top:5px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fafafa;font-size:12px;text-transform:uppercase;color:#525252;position:sticky;top:0;z-index:1}td.num,th.num{text-align:right}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#f5f5f5;font-size:12px;font-weight:800}.section{display:none}.section.active{display:block}.empty{padding:30px;text-align:center;color:var(--muted)}.filebox{border:2px dashed #d4d4d4;border-radius:12px;padding:24px;text-align:center}.help{color:var(--muted);font-size:13px;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap}.category{font-weight:900}.positive{color:var(--green);font-weight:800}.negative{color:var(--red);font-weight:800}.right{margin-left:auto}.toast{position:fixed;right:20px;bottom:20px;background:#171717;color:#fff;padding:12px 16px;border-radius:10px;display:none;z-index:5}.date{max-width:180px}
-@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header .wrap{align-items:flex-start;flex-direction:column}}
+:root{--brand:#f59e0b;--dark:#171717;--muted:#737373;--bg:#f5f5f4;--card:#fff;--line:#e5e5e5;--green:#15803d;--red:#b91c1c;--blue:#2563eb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:#171717}button,input,select{font:inherit}button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:750}button.primary{background:var(--brand);border-color:var(--brand)}button.dark{background:var(--dark);color:#fff;border-color:var(--dark)}button.danger{color:var(--red)}input,select{width:100%;border:1px solid #d4d4d4;border-radius:8px;padding:9px;background:#fff}input:focus,select:focus{outline:2px solid #fde68a;border-color:var(--brand)}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#171717,#292524)}.login-card{width:min(430px,100%);background:#fff;border-radius:20px;padding:30px;box-shadow:0 20px 70px #0006}.brand{font-size:42px;font-weight:950;color:var(--brand)}.login-card h1{margin:0 0 5px}.login-card p{color:var(--muted);line-height:1.5}.field{margin:14px 0}.field label{display:block;font-weight:750;font-size:13px;margin-bottom:6px}.pin{letter-spacing:7px;text-align:center;font-size:20px}.login-error{color:var(--red);font-size:13px;min-height:20px}
+#app{display:none}header{background:linear-gradient(135deg,#171717,#292524);color:#fff;padding:18px 20px}header .wrap{max-width:1500px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:15px}.logo{font-size:25px;font-weight:950;color:var(--brand)}header h1{font-size:20px;margin:0}header p{margin:2px 0 0;color:#d4d4d4;font-size:12px}.userbox{display:flex;align-items:center;gap:8px;font-size:13px}.userbox button{padding:7px 10px}
+main{max-width:1500px;margin:auto;padding:18px 20px}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.tabs{display:flex;gap:5px;flex-wrap:wrap}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}.right{margin-left:auto}.date{max-width:170px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.grid.analytics{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:0 2px 8px #00000008}.metric small{display:block;color:var(--muted);font-weight:700}.metric strong{display:block;font-size:23px;margin-top:5px}.section{display:none}.section.active{display:block}.help{font-size:13px;color:var(--muted);line-height:1.5}.tablewrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}th{background:#fafafa;color:#525252;font-size:11px;text-transform:uppercase;position:sticky;top:0}td.num,th.num{text-align:right}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#f5f5f5;font-size:11px;font-weight:800}.section-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px}.section-title h2{margin:0;font-size:19px}.actions{display:flex;gap:8px;flex-wrap:wrap}.chart{height:270px;display:flex;align-items:end;gap:6px;padding:15px 5px 5px;border-bottom:1px solid var(--line);overflow-x:auto}.barbox{min-width:38px;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:4px}.bar{width:28px;background:var(--brand);border-radius:6px 6px 0 0;min-height:3px}.barbox span{font-size:10px;color:var(--muted);white-space:nowrap}.history-list{display:grid;gap:8px}.history-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:10px}.empty{padding:30px;text-align:center;color:var(--muted)}.toast{position:fixed;right:18px;bottom:18px;background:#171717;color:#fff;padding:12px 15px;border-radius:10px;display:none;z-index:20}.filebox{border:2px dashed #d4d4d4;border-radius:12px;padding:22px;text-align:center}
+@media(max-width:900px){.grid,.grid.analytics{grid-template-columns:repeat(2,minmax(0,1fr))}header .wrap{align-items:flex-start}.right{margin-left:0}}
+@media(max-width:600px){header{padding:14px}header .wrap{flex-direction:column}.userbox{width:100%;justify-content:space-between}main{padding:12px}.toolbar{align-items:stretch}.tabs{width:100%;overflow-x:auto;flex-wrap:nowrap}.tab{white-space:nowrap}.date,.right{max-width:none;width:100%}.grid,.grid.analytics{grid-template-columns:1fr 1fr;gap:8px}.card{padding:12px}.metric strong{font-size:19px}.section-title{align-items:flex-start;flex-direction:column}.history-row{grid-template-columns:1fr auto}.history-row button{grid-column:1/-1}.tablewrap{margin-left:-1px;margin-right:-1px}.login-card{padding:24px}.chart{height:220px}}
 </style>
 </head>
 <body>
-<header><div class="wrap"><div><div class="logo">DC</div><h1>Delite Cravings</h1><p>Daily sales, stock & product price calculator</p></div><div class="help" style="color:#d4d4d4">Your data is saved in this browser.</div></div></header>
+<div id="login">
+<div class="login-card"><div class="brand">DC</div><h1>Delite Cravings</h1><p>Sales & inventory management</p>
+<div class="field"><label>Username</label><input id="loginUser" autocomplete="username" placeholder="Enter username"></div>
+<div class="field"><label>PIN</label><input id="loginPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="••••"></div>
+<div class="login-error" id="loginError"></div><button class="dark" style="width:100%" id="loginBtn">Sign in</button>
+<p class="help" style="margin-top:16px">First login? Default account is <b>admin</b> / <b>1234</b>. Change it after signing in.</p></div></div>
+
+<div id="app">
+<header><div class="wrap"><div><div class="logo">DC</div><h1>Delite Cravings</h1><p>Daily sales, stock, analytics & reports</p></div><div class="userbox"><span id="userDisplay"></span><button id="logout">Logout</button></div></div></header>
 <main>
 <div class="toolbar">
 <div class="tabs">
-<button class="tab active" data-tab="sales">Daily Sales</button>
-<button class="tab" data-tab="products">Products</button>
-<button class="tab" data-tab="import">Excel Import</button>
+<button class="tab active" data-tab="sales">Daily Sales</button><button class="tab" data-tab="analytics">Analytics</button><button class="tab" data-tab="reports">Past Reports</button><button class="tab" data-tab="products">Products</button><button class="tab" data-tab="import">Excel</button><button class="tab" data-tab="settings">Settings</button>
 </div>
-<input id="date" class="date" type="date">
-<div class="actions right"><button id="exportCsv">Export CSV</button><button id="resetDay" class="danger">Reset Day</button></div>
+<input id="date" class="date" type="date"><div class="actions right"><button id="exportCsv">Export CSV</button><button id="resetDay" class="danger">Reset Day</button></div>
 </div>
 
 <section id="sales" class="section active">
-<div class="grid">
-<div class="card metric"><small>Total Sales</small><strong id="mSales">₦0</strong></div>
-<div class="card metric"><small>Units Sold</small><strong id="mSold">0</strong></div>
-<div class="card metric"><small>Stock Added</small><strong id="mAdded">0</strong></div>
-<div class="card metric"><small>Closing Stock</small><strong id="mClosing">0</strong></div>
-</div>
-<div class="card" style="margin-bottom:16px"><div class="help"><b>How it works:</b> Qty Sold = Opening + Additions − Closing. Enter the physical closing count. The app blocks closing stock above available stock and calculates sales automatically. Unit prices are editable here.</div></div>
-<div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th class="num">Opening</th><th class="num">Additions</th><th class="num">Available</th><th class="num">Closing</th><th class="num">Sold</th><th class="num">Unit Price</th><th class="num">Sales</th></tr></thead><tbody id="salesBody"></tbody></table></div>
-<div id="categorySummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px"></div>
+<div class="grid"><div class="card metric"><small>Total Sales</small><strong id="mSales">₦0</strong></div><div class="card metric"><small>Units Sold</small><strong id="mSold">0</strong></div><div class="card metric"><small>Stock Added</small><strong id="mAdded">0</strong></div><div class="card metric"><small>Closing Stock</small><strong id="mClosing">0</strong></div></div>
+<div class="card" style="margin-bottom:14px"><div class="help"><b>Formula:</b> Qty Sold = Opening + Additions − Closing. Enter the physical closing count. Prices can be changed directly below.</div></div>
+<div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th class="num">Opening</th><th class="num">Additions</th><th class="num">Available</th><th class="num">Closing</th><th class="num">Sold</th><th class="num">Unit Price</th><th class="num">Sales</th></tr></thead><tbody id="salesBody"></tbody></table></div><div id="categorySummary" class="grid" style="margin-top:14px"></div>
 </section>
 
-<section id="products" class="section">
-<div class="card" style="margin-bottom:16px"><div class="actions"><button class="primary" id="addProduct">+ Add Product</button><button id="downloadTemplate">Download Excel Template</button></div><p class="help">Edit product names, categories, prices and opening stock. Price changes apply immediately to daily sales. Products are stored locally in this browser.</p></div>
-<div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th>SKU</th><th class="num">Unit Price</th><th class="num">Opening Stock</th><th>Action</th></tr></thead><tbody id="productBody"></tbody></table></div>
-</section>
+<section id="analytics" class="section"><div class="section-title"><h2>Sales Analytics</h2><div class="actions"><select id="analyticsRange"><option value="7">Last 7 days</option><option value="14">Last 14 days</option><option value="30">Last 30 days</option></select></div></div>
+<div class="grid analytics"><div class="card metric"><small>Period Sales</small><strong id="aSales">₦0</strong></div><div class="card metric"><small>Average Daily Sales</small><strong id="aAvg">₦0</strong></div><div class="card metric"><small>Best Sales Day</small><strong id="aBest">—</strong></div><div class="card metric"><small>Units Sold</small><strong id="aUnits">0</strong></div></div>
+<div class="card" style="margin-bottom:14px"><h3>Daily Sales Trend</h3><div id="chart" class="chart"></div></div>
+<div class="grid analytics"><div class="card"><h3>Top Products</h3><div id="topProducts"></div></div><div class="card"><h3>Category Performance</h3><div id="catAnalytics"></div></div></div></section>
 
-<section id="import" class="section">
-<div class="card"><h2>Import Product List</h2><p class="help">Upload .xlsx, .xls or .csv with columns: <b>Category, Product, Unit Price, Opening Stock, SKU</b>. Existing products are updated when SKU matches; otherwise Category + Product is used.</p>
-<div class="filebox"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><p id="importStatus" class="help">Choose your Excel/CSV file to import products.</p></div>
-</div>
-</section>
-</main>
-<div id="toast" class="toast"></div>
+<section id="reports" class="section"><div class="section-title"><h2>Past Reports</h2><div class="actions"><button id="exportAll">Export All Reports</button></div></div><div class="card"><p class="help">Select any saved date to open that day's report. Reports are stored in this browser.</p><div id="history" class="history-list"></div></div></section>
+
+<section id="products" class="section"><div class="card" style="margin-bottom:14px"><div class="actions"><button class="primary" id="addProduct">+ Add Product</button><button id="downloadTemplate">Download Excel Template</button></div><p class="help">Edit categories, names, prices and opening stock.</p></div><div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th>SKU</th><th class="num">Unit Price</th><th class="num">Opening Stock</th><th>Action</th></tr></thead><tbody id="productBody"></tbody></table></div></section>
+
+<section id="import" class="section"><div class="card"><h2>Import Product List</h2><p class="help">Upload .xlsx, .xls or .csv with columns: <b>Category, Product, Unit Price, Opening Stock, SKU</b>.</p><div class="filebox"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><p id="importStatus" class="help">Choose your file.</p></div></div></section>
+
+<section id="settings" class="section"><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div class="card"><h2>Login credentials</h2><div class="field"><label>Username</label><input id="newUser"></div><div class="field"><label>New PIN</label><input id="newPin" type="password" inputmode="numeric" maxlength="6"></div><button class="primary" id="saveCredentials">Save credentials</button><p class="help">This login is browser-based. It protects the app on the device but is not a server-side authentication system.</p></div><div class="card"><h2>Data</h2><p class="help">Sales and products are stored locally on this device/browser. Clearing browser storage will remove them.</p><button class="danger" id="clearData">Clear all app data</button></div></div></section>
+</main></div><div id="toast" class="toast"></div>
+
 <script>
-const KEY='delite_cravings_products_v2', DAY='delite_cravings_days_v2';
-const today=()=>new Date().toISOString().slice(0,10);
+const KEY='delite_cravings_products_v3',DAY='delite_cravings_days_v3',AUTH='delite_cravings_auth_v1';
+const today=()=>new Date().toISOString().slice(0,10);let date=today();
 let products=JSON.parse(localStorage.getItem(KEY)||'null')||[
-{id:'1',category:'Drinks',name:'Coke 50cl',sku:'DR-001',price:500,opening:20},
-{id:'2',category:'Drinks',name:'Fanta 50cl',sku:'DR-002',price:500,opening:20},
-{id:'3',category:'Drinks',name:'Bottle Water',sku:'DR-003',price:300,opening:30},
-{id:'4',category:'Snacks',name:'Meat Pie',sku:'SN-001',price:700,opening:20},
-{id:'5',category:'Snacks',name:'Sausage Roll',sku:'SN-002',price:500,opening:25},
-{id:'6',category:'Snacks',name:'Chin Chin',sku:'SN-003',price:300,opening:30},
-{id:'7',category:'Bread',name:'Medium Bread',sku:'BR-001',price:1000,opening:15},
-{id:'8',category:'Bread',name:'Large Bread',sku:'BR-002',price:1500,opening:15}
-];
-let date=today();
-const save=()=>localStorage.setItem(KEY,JSON.stringify(products));
-const days=()=>JSON.parse(localStorage.getItem(DAY)||'{}');
-const saveDays=o=>localStorage.setItem(DAY,JSON.stringify(o));
-function getDay(){const d=days();return d[date]||{}}
-function setDay(v){const d=days();d[date]=v;saveDays(d)}
+{id:'1',category:'Drinks',name:'Coke 50cl',sku:'DR-001',price:500,opening:20},{id:'2',category:'Drinks',name:'Fanta 50cl',sku:'DR-002',price:500,opening:20},{id:'3',category:'Drinks',name:'Bottle Water',sku:'DR-003',price:300,opening:30},
+{id:'4',category:'Snacks',name:'Meat Pie',sku:'SN-001',price:700,opening:20},{id:'5',category:'Snacks',name:'Sausage Roll',sku:'SN-002',price:500,opening:25},{id:'6',category:'Snacks',name:'Chin Chin',sku:'SN-003',price:300,opening:30},
+{id:'7',category:'Bread',name:'Medium Bread',sku:'BR-001',price:1000,opening:15},{id:'8',category:'Bread',name:'Large Bread',sku:'BR-002',price:1500,opening:15}];
+function auth(){return JSON.parse(localStorage.getItem(AUTH)||'null')||{username:'admin',pin:'1234'}}
+function save(){localStorage.setItem(KEY,JSON.stringify(products))}
+function days(){return JSON.parse(localStorage.getItem(DAY)||'{}')}function saveDays(x){localStorage.setItem(DAY,JSON.stringify(x))}
+function getDay(d=date){return days()[d]||{}}function setDay(v,d=date){const x=days();x[d]=v;saveDays(x)}
 function fmt(n){return '₦'+Number(n||0).toLocaleString('en-NG',{maximumFractionDigits:2})}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',1800)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function normCat(c){c=String(c||'').trim();if(/^drink/i.test(c))return'Drinks';if(/^snack/i.test(c))return'Snacks';if(/^bread/i.test(c))return'Bread';return c||'Other'}
-function key(p){return (p.sku||'').trim().toLowerCase()||normCat(p.category).toLowerCase()+'|'+p.name.trim().toLowerCase()}
-function renderSales(){
- const body=document.getElementById('salesBody'), day=getDay(); body.innerHTML='';
- let totals={sales:0,sold:0,added:0,closing:0}, cats={};
- products.forEach(p=>{
-  const r=day[p.id]||{}; const opening=Number(r.opening??p.opening??0), add=Math.max(0,Number(r.add||0)), available=opening+add;
-  let closing=Number(r.closing??available); closing=Math.min(Math.max(0,closing),available);
-  const sold=available-closing, price=Number(r.price??p.price??0), sales=sold*price;
-  totals.sales+=sales;totals.sold+=sold;totals.added+=add;totals.closing+=closing;
-  cats[p.category]??={sales:0,sold:0,closing:0};cats[p.category].sales+=sales;cats[p.category].sold+=sold;cats[p.category].closing+=closing;
-  const tr=document.createElement('tr');
-  tr.innerHTML='<td><span class="pill">'+esc(p.category)+'</span></td><td><b>'+esc(p.name)+'</b></td>'+
-   '<td class="num">'+opening+'</td>'+
-   '<td class="num"><input data-id="'+p.id+'" data-field="add" type="number" min="0" step="1" value="'+add+'"></td>'+
-   '<td class="num">'+available+'</td>'+
-   '<td class="num"><input data-id="'+p.id+'" data-field="closing" type="number" min="0" max="'+available+'" step="1" value="'+closing+'"></td>'+
-   '<td class="num">'+sold+'</td>'+
-   '<td class="num"><input data-id="'+p.id+'" data-field="price" type="number" min="0" step="1" value="'+price+'"></td>'+
-   '<td class="num"><b>'+fmt(sales)+'</b></td>';
-  body.appendChild(tr);
- });
- document.getElementById('mSales').textContent=fmt(totals.sales);document.getElementById('mSold').textContent=totals.sold.toLocaleString();document.getElementById('mAdded').textContent=totals.added.toLocaleString();document.getElementById('mClosing').textContent=totals.closing.toLocaleString();
- document.getElementById('categorySummary').innerHTML=Object.entries(cats).map(([c,v])=>'<div class="card"><div class="category">'+esc(c)+'</div><div class="help">'+v.sold+' sold · '+v.closing+' closing</div><strong>'+fmt(v.sales)+'</strong></div>').join('')||'<div class="empty">Add products to begin.</div>';
- body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{
-  const id=e.target.dataset.id, field=e.target.dataset.field, p=products.find(x=>x.id===id), d=getDay();d[id]??={};
-  let v=Number(e.target.value); if(!Number.isFinite(v)||v<0)v=0;
-  if(field==='closing'){const opening=Number(d[id].opening??p.opening??0), add=Number(d[id].add||0);v=Math.min(v,opening+add)}
-  d[id][field]=v;setDay(d); if(field==='price'){p.price=v;save()} renderSales();
- }));
-}
-function renderProducts(){
- const body=document.getElementById('productBody');body.innerHTML='';
- products.forEach(p=>{
-  const tr=document.createElement('tr');
-  tr.innerHTML='<td><input data-id="'+p.id+'" data-f="category" value="'+escAttr(p.category)+'"></td><td><input data-id="'+p.id+'" data-f="name" value="'+escAttr(p.name)+'"></td><td><input data-id="'+p.id+'" data-f="sku" value="'+escAttr(p.sku||'')+'"></td><td class="num"><input data-id="'+p.id+'" data-f="price" type="number" min="0" value="'+Number(p.price||0)+'"></td><td class="num"><input data-id="'+p.id+'" data-f="opening" type="number" min="0" value="'+Number(p.opening||0)+'"></td><td><button class="danger" data-del="'+p.id+'">Remove</button></td>';
-  body.appendChild(tr);
- });
- body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{const p=products.find(x=>x.id===e.target.dataset.id),f=e.target.dataset.f;let v=e.target.value;if(['price','opening'].includes(f))v=Math.max(0,Number(v)||0);if(f==='category')v=normCat(v);p[f]=v;save();renderSales();renderProducts()}));
- body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{if(confirm('Remove this product?')){products=products.filter(p=>p.id!==b.dataset.del);save();renderProducts();renderSales();}}));
-}
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function escAttr(s){return esc(s)}
-function addProduct(){const p={id:crypto.randomUUID(),category:'Snacks',name:'New Product',sku:'',price:0,opening:0};products.push(p);save();renderProducts();renderSales();toast('Product added')}
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.tab).classList.add('active')}));
+function calc(p,d=date){const r=getDay(d)[p.id]||{},o=Number(r.opening??p.opening??0),a=Math.max(0,Number(r.add||0)),av=o+a,c=Math.min(Math.max(0,Number(r.closing??av)),av),s=av-c,pr=Number(r.price??p.price??0);return{o,a,av,c,s,pr,sales:s*pr}}
+function summary(d=date){return products.reduce((x,p)=>{const c=calc(p,d);x.sales+=c.sales;x.sold+=c.s;x.added+=c.a;x.closing+=c.c;return x},{sales:0,sold:0,added:0,closing:0})}
+function renderSales(){const body=document.getElementById('salesBody'),day=getDay();body.innerHTML='';const t=summary();const cats={};products.forEach(p=>{const c=calc(p);cats[p.category]??={sales:0,sold:0,closing:0};cats[p.category].sales+=c.sales;cats[p.category].sold+=c.s;cats[p.category].closing+=c.c;const tr=document.createElement('tr');tr.innerHTML='<td><span class="pill">'+esc(p.category)+'</span></td><td><b>'+esc(p.name)+'</b></td><td class="num">'+c.o+'</td><td class="num"><input data-id="'+p.id+'" data-f="add" type="number" min="0" value="'+c.a+'"></td><td class="num">'+c.av+'</td><td class="num"><input data-id="'+p.id+'" data-f="closing" type="number" min="0" max="'+c.av+'" value="'+c.c+'"></td><td class="num">'+c.s+'</td><td class="num"><input data-id="'+p.id+'" data-f="price" type="number" min="0" value="'+c.pr+'"></td><td class="num"><b>'+fmt(c.sales)+'</b></td>';body.appendChild(tr)});
+document.getElementById('mSales').textContent=fmt(t.sales);document.getElementById('mSold').textContent=t.sold.toLocaleString();document.getElementById('mAdded').textContent=t.added.toLocaleString();document.getElementById('mClosing').textContent=t.closing.toLocaleString();
+document.getElementById('categorySummary').innerHTML=Object.entries(cats).map(([k,v])=>'<div class="card metric"><small>'+esc(k)+'</small><strong>'+fmt(v.sales)+'</strong><div class="help">'+v.sold+' sold · '+v.closing+' closing</div></div>').join('');
+body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{const id=e.target.dataset.id,f=e.target.dataset.f,p=products.find(x=>x.id===id),d=getDay();d[id]??={};let v=Math.max(0,Number(e.target.value)||0);if(f==='closing')v=Math.min(v,Number(d[id].opening??p.opening??0)+Number(d[id].add||0));d[id][f]=v;setDay(d);if(f==='price'){p.price=v;save()}renderSales();renderAnalytics()}))}
+function renderProducts(){const body=document.getElementById('productBody');body.innerHTML='';products.forEach(p=>{const tr=document.createElement('tr');tr.innerHTML='<td><input data-id="'+p.id+'" data-f="category" value="'+esc(p.category)+'"></td><td><input data-id="'+p.id+'" data-f="name" value="'+esc(p.name)+'"></td><td><input data-id="'+p.id+'" data-f="sku" value="'+esc(p.sku||'')+'"></td><td class="num"><input data-id="'+p.id+'" data-f="price" type="number" min="0" value="'+p.price+'"></td><td class="num"><input data-id="'+p.id+'" data-f="opening" type="number" min="0" value="'+p.opening+'"></td><td><button class="danger" data-del="'+p.id+'">Remove</button></td>';body.appendChild(tr)});body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{const p=products.find(x=>x.id===e.target.dataset.id),f=e.target.dataset.f;let v=e.target.value;if(['price','opening'].includes(f))v=Math.max(0,Number(v)||0);if(f==='category')v=normCat(v);p[f]=v;save();renderProducts();renderSales();renderAnalytics()}));body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{if(confirm('Remove this product?')){products=products.filter(p=>p.id!==b.dataset.del);save();renderProducts();renderSales();renderAnalytics()}}))}
+function addProduct(){products.push({id:crypto.randomUUID(),category:'Snacks',name:'New Product',sku:'',price:0,opening:0});save();renderProducts();renderSales();toast('Product added')}
+function datesBack(n){const a=[];for(let i=n-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);a.push(d.toISOString().slice(0,10))}return a}
+function renderAnalytics(){const n=Number(document.getElementById('analyticsRange').value),ds=datesBack(n),vals=ds.map(d=>({d,...summary(d)})),period=vals.reduce((x,v)=>{x.sales+=v.sales;x.sold+=v.sold;return x},{sales:0,sold:0}),best=vals.reduce((a,b)=>b.sales>a.sales?b:a,vals[0]||{sales:0});document.getElementById('aSales').textContent=fmt(period.sales);document.getElementById('aAvg').textContent=fmt(period.sales/n);document.getElementById('aUnits').textContent=period.sold.toLocaleString();document.getElementById('aBest').textContent=best.sales?new Date(best.d+'T00:00:00').toLocaleDateString('en-NG',{day:'numeric',month:'short'}):'—';const max=Math.max(1,...vals.map(v=>v.sales));document.getElementById('chart').innerHTML=vals.map(v=>'<div class="barbox" title="'+v.d+': '+fmt(v.sales)+'"><span>'+fmt(v.sales).replace('₦','').slice(0,8)+'</span><div class="bar" style="height:'+Math.max(3,v.sales/max*190)+'px"></div><span>'+v.d.slice(5)+'</span></div>').join('');
+const prod={};vals.forEach(v=>products.forEach(p=>{const c=calc(p,v.d);prod[p.name]=(prod[p.name]||0)+c.sales}));document.getElementById('topProducts').innerHTML=Object.entries(prod).sort((a,b)=>b[1]-a[1]).slice(0,8).map((x,i)=>'<div class="history-row"><b>'+(i+1)+'. '+esc(x[0])+'</b><strong>'+fmt(x[1])+'</strong></div>').join('')||'<div class="empty">No sales recorded.</div>';
+const cat={};vals.forEach(v=>products.forEach(p=>{const c=calc(p,v.d);cat[p.category]=(cat[p.category]||0)+c.sales}));document.getElementById('catAnalytics').innerHTML=Object.entries(cat).sort((a,b)=>b[1]-a[1]).map(x=>'<div class="history-row"><b>'+esc(x[0])+'</b><strong>'+fmt(x[1])+'</strong></div>').join('')||'<div class="empty">No sales recorded.</div>'}
+function renderReports(){const ds=Object.keys(days()).sort().reverse();document.getElementById('history').innerHTML=ds.map(d=>{const s=summary(d);return '<div class="history-row"><div><b>'+new Date(d+'T00:00:00').toLocaleDateString('en-NG',{weekday:'short',day:'numeric',month:'short',year:'numeric'})+'</b><div class="help">'+s.sold+' units sold · '+s.closing+' closing</div></div><strong>'+fmt(s.sales)+'</strong><button data-open="'+d+'">Open</button></div>'}).join('')||'<div class="empty">No saved daily reports yet. Complete a day and it will appear here.</div>';document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>{date=b.dataset.open;document.getElementById('date').value=date;showTab('sales');renderSales()}))}
+function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id===name));if(name==='analytics')renderAnalytics();if(name==='reports')renderReports()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 document.getElementById('date').value=date;document.getElementById('date').addEventListener('change',e=>{date=e.target.value||today();renderSales()});
+document.getElementById('analyticsRange').addEventListener('change',renderAnalytics);
 document.getElementById('addProduct').addEventListener('click',addProduct);
-document.getElementById('resetDay').addEventListener('click',()=>{if(confirm('Reset additions and closing counts for '+date+'?')){const d=days();delete d[date];saveDays(d);renderSales();toast('Day reset')}})
+document.getElementById('resetDay').addEventListener('click',()=>{if(confirm('Reset '+date+'?')){const x=days();delete x[date];saveDays(x);renderSales();renderReports();renderAnalytics();toast('Day reset')}});
+document.getElementById('logout').addEventListener('click',()=>{sessionStorage.removeItem('dc_logged_in');location.reload()});
+document.getElementById('loginBtn').addEventListener('click',login);document.getElementById('loginPin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+function login(){const a=auth(),u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPin').value.trim();if(u===a.username&&p===a.pin){sessionStorage.setItem('dc_logged_in','1');start()}else document.getElementById('loginError').textContent='Incorrect username or PIN.'}
+document.getElementById('saveCredentials').addEventListener('click',()=>{const u=document.getElementById('newUser').value.trim(),p=document.getElementById('newPin').value.trim();if(!u||!/^\d{4,6}$/.test(p))return toast('Username and 4–6 digit PIN required');localStorage.setItem(AUTH,JSON.stringify({username:u,pin:p}));document.getElementById('newPin').value='';toast('Credentials saved')});
+document.getElementById('clearData').addEventListener('click',()=>{if(confirm('This will delete products and all saved sales reports on this device. Continue?')){localStorage.removeItem(KEY);localStorage.removeItem(DAY);location.reload()}});
 document.getElementById('downloadTemplate').addEventListener('click',()=>{const rows=[['Category','Product','Unit Price','Opening Stock','SKU'],['Drinks','Coke 50cl',500,20,'DR-001'],['Snacks','Meat Pie',700,20,'SN-001'],['Bread','Medium Bread',1000,15,'BR-001']];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Products');XLSX.writeFile(wb,'Delite-Cravings-Product-Template.xlsx')});
-document.getElementById('fileInput').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const status=document.getElementById('importStatus');const reader=new FileReader();reader.onload=ev=>{try{let rows;if(file.name.toLowerCase().endsWith('.csv'))rows=XLSX.utils.sheet_to_json(XLSX.utils.csv_to_sheet(ev.target.result),{defval:''});else{const wb=XLSX.read(ev.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})}let count=0;rows.forEach(row=>{const get=(...names)=>{const k=Object.keys(row).find(x=>names.some(n=>x.trim().toLowerCase()===n));return k==null?'':row[k]};const name=String(get('product','product name','item')).trim();if(!name)return;const category=normCat(get('category'));const sku=String(get('sku','code')).trim();const price=Number(get('unit price','price','selling price'))||0;const opening=Number(get('opening stock','opening','stock'))||0;const match=products.find(p=>(sku&&p.sku&&p.sku.toLowerCase()===sku.toLowerCase())||(p.name.toLowerCase()===name.toLowerCase()&&p.category.toLowerCase()===category.toLowerCase()));if(match){match.category=category;match.name=name;match.sku=sku||match.sku;match.price=price;match.opening=opening}else products.push({id:crypto.randomUUID(),category,name,sku,price,opening});count++});save();renderProducts();renderSales();status.textContent=count+' product row(s) imported/updated successfully.';toast('Import complete')}catch(err){status.textContent='Import failed: '+err.message}};if(file.name.toLowerCase().endsWith('.csv'))reader.readAsText(file);else reader.readAsArrayBuffer(file)});
-document.getElementById('exportCsv').addEventListener('click',()=>{const rows=[['Date','Category','Product','Opening','Additions','Closing','Qty Sold','Unit Price','Sales']];const d=getDay();products.forEach(p=>{const r=d[p.id]||{},o=Number(r.opening??p.opening??0),a=Number(r.add||0),av=o+a,c=Math.min(Math.max(0,Number(r.closing??av)),av),s=av-c,pr=Number(r.price??p.price??0);rows.push([date,p.category,p.name,o,a,c,s,pr,s*pr])});const csv=rows.map(r=>r.map(x=>{const s=String(x??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Delite-Cravings-'+date+'.csv';a.click();URL.revokeObjectURL(a.href)});
-renderProducts();renderSales();
+document.getElementById('fileInput').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const st=document.getElementById('importStatus'),r=new FileReader();r.onload=ev=>{try{let rows;if(file.name.toLowerCase().endsWith('.csv'))rows=XLSX.utils.sheet_to_json(XLSX.utils.csv_to_sheet(ev.target.result),{defval:''});else{const wb=XLSX.read(ev.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})}let n=0;rows.forEach(row=>{const get=(...names)=>{const k=Object.keys(row).find(x=>names.includes(x.trim().toLowerCase()));return k==null?'':row[k]};const name=String(get('product','product name','item')).trim();if(!name)return;const category=normCat(get('category')),sku=String(get('sku','code')).trim(),price=Number(get('unit price','price','selling price'))||0,opening=Number(get('opening stock','opening','stock'))||0;const m=products.find(p=>(sku&&p.sku&&p.sku.toLowerCase()===sku.toLowerCase())||(p.name.toLowerCase()===name.toLowerCase()&&p.category.toLowerCase()===category.toLowerCase()));if(m)Object.assign(m,{category,name,sku:sku||m.sku,price,opening});else products.push({id:crypto.randomUUID(),category,name,sku,price,opening});n++});save();renderProducts();renderSales();st.textContent=n+' row(s) imported/updated.';toast('Import complete')}catch(err){st.textContent='Import failed: '+err.message}};file.name.toLowerCase().endsWith('.csv')?r.readAsText(file):r.readAsArrayBuffer(file)});
+function exportRows(ds){const rows=[['Date','Category','Product','Opening','Additions','Closing','Qty Sold','Unit Price','Sales']];ds.forEach(d=>products.forEach(p=>{const c=calc(p,d);rows.push([d,p.category,p.name,c.o,c.a,c.c,c.s,c.pr,c.sales])}));return rows}
+document.getElementById('exportCsv').addEventListener('click',()=>{const rows=exportRows([date]),csv=rows.map(r=>r.map(x=>{const s=String(x??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Delite-Cravings-'+date+'.csv';a.click()});
+document.getElementById('exportAll').addEventListener('click',()=>{const ds=Object.keys(days()).sort(),rows=exportRows(ds),csv=rows.map(r=>r.join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='Delite-Cravings-All-Reports.csv';a.click()});
+function start(){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';const a=auth();document.getElementById('userDisplay').textContent='Signed in: '+a.username;document.getElementById('newUser').value=a.username;renderProducts();renderSales();renderAnalytics();renderReports()}
+if(sessionStorage.getItem('dc_logged_in')==='1')start();
 </script>
 </body></html>
