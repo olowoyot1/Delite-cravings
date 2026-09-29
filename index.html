@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delite Cravings — Daily Sales & Stock</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--brand:#f59e0b;--dark:#171717;--muted:#737373;--bg:#f7f7f5;--card:#fff;--line:#e5e5e5;--green:#15803d;--red:#b91c1c}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:#171717}
+header{background:linear-gradient(135deg,#171717,#292524);color:#fff;padding:24px 20px}header .wrap{max-width:1400px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:20px}h1{margin:0;font-size:26px}header p{margin:5px 0 0;color:#d4d4d4}.logo{font-size:34px;font-weight:900;color:var(--brand)}
+main{max-width:1400px;margin:22px auto;padding:0 20px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}.tabs{display:flex;gap:6px;flex-wrap:wrap}.tab,button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}button.primary{background:var(--brand);border-color:var(--brand);color:#171717}button.danger{color:var(--red)}input,select{width:100%;border:1px solid #d4d4d4;border-radius:8px;padding:8px 9px;background:#fff;font:inherit}input:focus,select:focus{outline:2px solid #fde68a;border-color:var(--brand)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #00000008}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.metric small{display:block;color:var(--muted);font-weight:700}.metric strong{display:block;font-size:24px;margin-top:5px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{border-collapse:collapse;width:100%;min-width:1050px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{background:#fafafa;font-size:12px;text-transform:uppercase;color:#525252;position:sticky;top:0;z-index:1}td.num,th.num{text-align:right}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#f5f5f5;font-size:12px;font-weight:800}.section{display:none}.section.active{display:block}.empty{padding:30px;text-align:center;color:var(--muted)}.filebox{border:2px dashed #d4d4d4;border-radius:12px;padding:24px;text-align:center}.help{color:var(--muted);font-size:13px;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap}.category{font-weight:900}.positive{color:var(--green);font-weight:800}.negative{color:var(--red);font-weight:800}.right{margin-left:auto}.toast{position:fixed;right:20px;bottom:20px;background:#171717;color:#fff;padding:12px 16px;border-radius:10px;display:none;z-index:5}.date{max-width:180px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header .wrap{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div><div class="logo">DC</div><h1>Delite Cravings</h1><p>Daily sales, stock & product price calculator</p></div><div class="help" style="color:#d4d4d4">Your data is saved in this browser.</div></div></header>
+<main>
+<div class="toolbar">
+<div class="tabs">
+<button class="tab active" data-tab="sales">Daily Sales</button>
+<button class="tab" data-tab="products">Products</button>
+<button class="tab" data-tab="import">Excel Import</button>
+</div>
+<input id="date" class="date" type="date">
+<div class="actions right"><button id="exportCsv">Export CSV</button><button id="resetDay" class="danger">Reset Day</button></div>
+</div>
+
+<section id="sales" class="section active">
+<div class="grid">
+<div class="card metric"><small>Total Sales</small><strong id="mSales">₦0</strong></div>
+<div class="card metric"><small>Units Sold</small><strong id="mSold">0</strong></div>
+<div class="card metric"><small>Stock Added</small><strong id="mAdded">0</strong></div>
+<div class="card metric"><small>Closing Stock</small><strong id="mClosing">0</strong></div>
+</div>
+<div class="card" style="margin-bottom:16px"><div class="help"><b>How it works:</b> Qty Sold = Opening + Additions − Closing. Enter the physical closing count. The app blocks closing stock above available stock and calculates sales automatically. Unit prices are editable here.</div></div>
+<div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th class="num">Opening</th><th class="num">Additions</th><th class="num">Available</th><th class="num">Closing</th><th class="num">Sold</th><th class="num">Unit Price</th><th class="num">Sales</th></tr></thead><tbody id="salesBody"></tbody></table></div>
+<div id="categorySummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px"></div>
+</section>
+
+<section id="products" class="section">
+<div class="card" style="margin-bottom:16px"><div class="actions"><button class="primary" id="addProduct">+ Add Product</button><button id="downloadTemplate">Download Excel Template</button></div><p class="help">Edit product names, categories, prices and opening stock. Price changes apply immediately to daily sales. Products are stored locally in this browser.</p></div>
+<div class="tablewrap"><table><thead><tr><th>Category</th><th>Product</th><th>SKU</th><th class="num">Unit Price</th><th class="num">Opening Stock</th><th>Action</th></tr></thead><tbody id="productBody"></tbody></table></div>
+</section>
+
+<section id="import" class="section">
+<div class="card"><h2>Import Product List</h2><p class="help">Upload .xlsx, .xls or .csv with columns: <b>Category, Product, Unit Price, Opening Stock, SKU</b>. Existing products are updated when SKU matches; otherwise Category + Product is used.</p>
+<div class="filebox"><input id="fileInput" type="file" accept=".xlsx,.xls,.csv"><p id="importStatus" class="help">Choose your Excel/CSV file to import products.</p></div>
+</div>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const KEY='delite_cravings_products_v2', DAY='delite_cravings_days_v2';
+const today=()=>new Date().toISOString().slice(0,10);
+let products=JSON.parse(localStorage.getItem(KEY)||'null')||[
+{id:'1',category:'Drinks',name:'Coke 50cl',sku:'DR-001',price:500,opening:20},
+{id:'2',category:'Drinks',name:'Fanta 50cl',sku:'DR-002',price:500,opening:20},
+{id:'3',category:'Drinks',name:'Bottle Water',sku:'DR-003',price:300,opening:30},
+{id:'4',category:'Snacks',name:'Meat Pie',sku:'SN-001',price:700,opening:20},
+{id:'5',category:'Snacks',name:'Sausage Roll',sku:'SN-002',price:500,opening:25},
+{id:'6',category:'Snacks',name:'Chin Chin',sku:'SN-003',price:300,opening:30},
+{id:'7',category:'Bread',name:'Medium Bread',sku:'BR-001',price:1000,opening:15},
+{id:'8',category:'Bread',name:'Large Bread',sku:'BR-002',price:1500,opening:15}
+];
+let date=today();
+const save=()=>localStorage.setItem(KEY,JSON.stringify(products));
+const days=()=>JSON.parse(localStorage.getItem(DAY)||'{}');
+const saveDays=o=>localStorage.setItem(DAY,JSON.stringify(o));
+function getDay(){const d=days();return d[date]||{}}
+function setDay(v){const d=days();d[date]=v;saveDays(d)}
+function fmt(n){return '₦'+Number(n||0).toLocaleString('en-NG',{maximumFractionDigits:2})}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',1800)}
+function normCat(c){c=String(c||'').trim();if(/^drink/i.test(c))return'Drinks';if(/^snack/i.test(c))return'Snacks';if(/^bread/i.test(c))return'Bread';return c||'Other'}
+function key(p){return (p.sku||'').trim().toLowerCase()||normCat(p.category).toLowerCase()+'|'+p.name.trim().toLowerCase()}
+function renderSales(){
+ const body=document.getElementById('salesBody'), day=getDay(); body.innerHTML='';
+ let totals={sales:0,sold:0,added:0,closing:0}, cats={};
+ products.forEach(p=>{
+  const r=day[p.id]||{}; const opening=Number(r.opening??p.opening??0), add=Math.max(0,Number(r.add||0)), available=opening+add;
+  let closing=Number(r.closing??available); closing=Math.min(Math.max(0,closing),available);
+  const sold=available-closing, price=Number(r.price??p.price??0), sales=sold*price;
+  totals.sales+=sales;totals.sold+=sold;totals.added+=add;totals.closing+=closing;
+  cats[p.category]??={sales:0,sold:0,closing:0};cats[p.category].sales+=sales;cats[p.category].sold+=sold;cats[p.category].closing+=closing;
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td><span class="pill">'+esc(p.category)+'</span></td><td><b>'+esc(p.name)+'</b></td>'+
+   '<td class="num">'+opening+'</td>'+
+   '<td class="num"><input data-id="'+p.id+'" data-field="add" type="number" min="0" step="1" value="'+add+'"></td>'+
+   '<td class="num">'+available+'</td>'+
+   '<td class="num"><input data-id="'+p.id+'" data-field="closing" type="number" min="0" max="'+available+'" step="1" value="'+closing+'"></td>'+
+   '<td class="num">'+sold+'</td>'+
+   '<td class="num"><input data-id="'+p.id+'" data-field="price" type="number" min="0" step="1" value="'+price+'"></td>'+
+   '<td class="num"><b>'+fmt(sales)+'</b></td>';
+  body.appendChild(tr);
+ });
+ document.getElementById('mSales').textContent=fmt(totals.sales);document.getElementById('mSold').textContent=totals.sold.toLocaleString();document.getElementById('mAdded').textContent=totals.added.toLocaleString();document.getElementById('mClosing').textContent=totals.closing.toLocaleString();
+ document.getElementById('categorySummary').innerHTML=Object.entries(cats).map(([c,v])=>'<div class="card"><div class="category">'+esc(c)+'</div><div class="help">'+v.sold+' sold · '+v.closing+' closing</div><strong>'+fmt(v.sales)+'</strong></div>').join('')||'<div class="empty">Add products to begin.</div>';
+ body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{
+  const id=e.target.dataset.id, field=e.target.dataset.field, p=products.find(x=>x.id===id), d=getDay();d[id]??={};
+  let v=Number(e.target.value); if(!Number.isFinite(v)||v<0)v=0;
+  if(field==='closing'){const opening=Number(d[id].opening??p.opening??0), add=Number(d[id].add||0);v=Math.min(v,opening+add)}
+  d[id][field]=v;setDay(d); if(field==='price'){p.price=v;save()} renderSales();
+ }));
+}
+function renderProducts(){
+ const body=document.getElementById('productBody');body.innerHTML='';
+ products.forEach(p=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML='<td><input data-id="'+p.id+'" data-f="category" value="'+escAttr(p.category)+'"></td><td><input data-id="'+p.id+'" data-f="name" value="'+escAttr(p.name)+'"></td><td><input data-id="'+p.id+'" data-f="sku" value="'+escAttr(p.sku||'')+'"></td><td class="num"><input data-id="'+p.id+'" data-f="price" type="number" min="0" value="'+Number(p.price||0)+'"></td><td class="num"><input data-id="'+p.id+'" data-f="opening" type="number" min="0" value="'+Number(p.opening||0)+'"></td><td><button class="danger" data-del="'+p.id+'">Remove</button></td>';
+  body.appendChild(tr);
+ });
+ body.querySelectorAll('input').forEach(i=>i.addEventListener('change',e=>{const p=products.find(x=>x.id===e.target.dataset.id),f=e.target.dataset.f;let v=e.target.value;if(['price','opening'].includes(f))v=Math.max(0,Number(v)||0);if(f==='category')v=normCat(v);p[f]=v;save();renderSales();renderProducts()}));
+ body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>{if(confirm('Remove this product?')){products=products.filter(p=>p.id!==b.dataset.del);save();renderProducts();renderSales();}}));
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function escAttr(s){return esc(s)}
+function addProduct(){const p={id:crypto.randomUUID(),category:'Snacks',name:'New Product',sku:'',price:0,opening:0};products.push(p);save();renderProducts();renderSales();toast('Product added')}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.tab).classList.add('active')}));
+document.getElementById('date').value=date;document.getElementById('date').addEventListener('change',e=>{date=e.target.value||today();renderSales()});
+document.getElementById('addProduct').addEventListener('click',addProduct);
+document.getElementById('resetDay').addEventListener('click',()=>{if(confirm('Reset additions and closing counts for '+date+'?')){const d=days();delete d[date];saveDays(d);renderSales();toast('Day reset')}})
+document.getElementById('downloadTemplate').addEventListener('click',()=>{const rows=[['Category','Product','Unit Price','Opening Stock','SKU'],['Drinks','Coke 50cl',500,20,'DR-001'],['Snacks','Meat Pie',700,20,'SN-001'],['Bread','Medium Bread',1000,15,'BR-001']];const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Products');XLSX.writeFile(wb,'Delite-Cravings-Product-Template.xlsx')});
+document.getElementById('fileInput').addEventListener('change',e=>{const file=e.target.files[0];if(!file)return;const status=document.getElementById('importStatus');const reader=new FileReader();reader.onload=ev=>{try{let rows;if(file.name.toLowerCase().endsWith('.csv'))rows=XLSX.utils.sheet_to_json(XLSX.utils.csv_to_sheet(ev.target.result),{defval:''});else{const wb=XLSX.read(ev.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})}let count=0;rows.forEach(row=>{const get=(...names)=>{const k=Object.keys(row).find(x=>names.some(n=>x.trim().toLowerCase()===n));return k==null?'':row[k]};const name=String(get('product','product name','item')).trim();if(!name)return;const category=normCat(get('category'));const sku=String(get('sku','code')).trim();const price=Number(get('unit price','price','selling price'))||0;const opening=Number(get('opening stock','opening','stock'))||0;const match=products.find(p=>(sku&&p.sku&&p.sku.toLowerCase()===sku.toLowerCase())||(p.name.toLowerCase()===name.toLowerCase()&&p.category.toLowerCase()===category.toLowerCase()));if(match){match.category=category;match.name=name;match.sku=sku||match.sku;match.price=price;match.opening=opening}else products.push({id:crypto.randomUUID(),category,name,sku,price,opening});count++});save();renderProducts();renderSales();status.textContent=count+' product row(s) imported/updated successfully.';toast('Import complete')}catch(err){status.textContent='Import failed: '+err.message}};if(file.name.toLowerCase().endsWith('.csv'))reader.readAsText(file);else reader.readAsArrayBuffer(file)});
+document.getElementById('exportCsv').addEventListener('click',()=>{const rows=[['Date','Category','Product','Opening','Additions','Closing','Qty Sold','Unit Price','Sales']];const d=getDay();products.forEach(p=>{const r=d[p.id]||{},o=Number(r.opening??p.opening??0),a=Number(r.add||0),av=o+a,c=Math.min(Math.max(0,Number(r.closing??av)),av),s=av-c,pr=Number(r.price??p.price??0);rows.push([date,p.category,p.name,o,a,c,s,pr,s*pr])});const csv=rows.map(r=>r.map(x=>{const s=String(x??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Delite-Cravings-'+date+'.csv';a.click();URL.revokeObjectURL(a.href)});
+renderProducts();renderSales();
+</script>
+</body></html>
