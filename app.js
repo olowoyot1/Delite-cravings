@@ -20,7 +20,7 @@ let rows=[];
 const UI='dc_ui_state_v1',ui=(()=>{try{return JSON.parse(sessionStorage.getItem(UI))||{}}catch{return{}}})(),saveUI=()=>{try{sessionStorage.setItem(UI,JSON.stringify(ui))}catch{}};
 let saveTimer=null,dirty={d:false,p:false};
 function status(m,state){let s=$('saveStatus');if(s){s.textContent=m;s.dataset.state=state}}
-function flush(){clearTimeout(saveTimer);saveTimer=null;if(!dirty.d&&!dirty.p)return true;let ok=true;if(dirty.d){if(write(S.d,days))dirty.d=false;else ok=false}if(dirty.p){if(write(S.p,products))dirty.p=false;else ok=false}status(ok?'All changes saved':'Save failed — storage full',ok?'saved':'error');if(!ok)toast('Could not save. Free up browser storage.');return ok}
+function flush(){clearTimeout(saveTimer);saveTimer=null;if(!dirty.d&&!dirty.p){if(window.DelCravingsCloudSync)setTimeout(window.DelCravingsCloudSync,0);return true}let ok=true;if(dirty.d){if(write(S.d,days))dirty.d=false;else ok=false}if(dirty.p){if(write(S.p,products))dirty.p=false;else ok=false}status(ok?'All changes saved':'Save failed — storage full',ok?'saved':'error');if(!ok)toast('Could not save. Free up browser storage.');else if(window.DelCravingsCloudSync)setTimeout(window.DelCravingsCloudSync,0);return ok}
 function schedule(){status('Saving…','saving');clearTimeout(saveTimer);saveTimer=setTimeout(flush,300)}
 function persistDay(){let d=$('businessDate').value||today();days[d]={...(days[d]||{}),date:d,updatedAt:new Date().toISOString(),rows:rows.map(r=>({...r}))};dirty.d=true;schedule()}
 function persistProducts(){dirty.p=true;schedule()}
