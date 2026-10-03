@@ -177,3 +177,7 @@ th:last-child{text-align:left}
   .btn{min-height:44px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.history-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.history-tools select{width:auto;min-width:200px}
+.pad{padding:16px 20px}
+.price-change{display:block;font-size:12px;color:var(--subtle)}
