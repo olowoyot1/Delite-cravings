@@ -24,6 +24,46 @@ function flush(){clearTimeout(saveTimer);saveTimer=null;if(!dirty.d&&!dirty.p)re
 function schedule(){status('Saving…','saving');clearTimeout(saveTimer);saveTimer=setTimeout(flush,300)}
 function persistDay(){let d=$('businessDate').value||today();days[d]={...(days[d]||{}),date:d,updatedAt:new Date().toISOString(),rows:rows.map(r=>({...r}))};dirty.d=true;schedule()}
 function persistProducts(){dirty.p=true;schedule()}
+const CLOUD_ENDPOINT='/api/cloud';
+let cloudReady=false,cloudBusy=false,cloudPulling=false;
+async function cloudPush(){
+  if(cloudBusy||cloudPulling)return false;
+  cloudBusy=true;
+  try{
+    const a=auth();
+    const payload={action:'push',username:a.username,pin:a.pin,products,days,
+      debtors:read('dc_debtors_v1',[]),
+      creditSales:read('dc_credit_sales_v1',[]),
+      payments:read('dc_debtor_payments_v1',[])};
+    const res=await fetch(CLOUD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok)throw new Error((await res.text())||('Cloud save failed '+res.status));
+    cloudReady=true;status('Cloud saved','saved');return true;
+  }catch(e){console.warn('Cloud sync unavailable:',e);status('Local save only','error');return false}
+  finally{cloudBusy=false}
+}
+async function cloudPull(){
+  if(cloudPulling)return;
+  cloudPulling=true;
+  try{
+    const a=auth();
+    const res=await fetch(CLOUD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'pull',username:a.username,pin:a.pin})});
+    if(!res.ok)throw new Error((await res.text())||('Cloud load failed '+res.status));
+    const out=await res.json();
+    if(out.exists&&out.data){
+      if(Array.isArray(out.data.products))products=out.data.products;
+      if(out.data.days&&typeof out.data.days==='object')days=out.data.days;
+      if(Array.isArray(out.data.debtors))write('dc_debtors_v1',out.data.debtors);
+      if(Array.isArray(out.data.creditSales))write('dc_credit_sales_v1',out.data.creditSales);
+      if(Array.isArray(out.data.payments))write('dc_debtor_payments_v1',out.data.payments);
+      write(S.p,products);write(S.d,days);cloudReady=true;
+      sales();prod();reports();analytics();
+      if(window.DelCravingsRefreshCredit)window.DelCravingsRefreshCredit();
+      status('Cloud data loaded','saved');
+    }else{cloudReady=true;await cloudPush()}
+  }catch(e){console.warn('Cloud load unavailable:',e);status('Local mode — configure cloud database','error')}
+  finally{cloudPulling=false}
+}
+
 function toast(m){let x=$('toast');x.textContent=m;x.classList.add('show');clearTimeout(window.__t);window.__t=setTimeout(()=>x.classList.remove('show'),2000)}
 function totals(rs){let t={sales:0,units:0,added:0,closing:0,p:{},c:{}};rs.forEach(r=>{let z=calc(r);t.sales+=z.sales;t.units+=z.sold;t.added+=num(r.added);t.closing+=z.closing;t.p[r.name]=(t.p[r.name]||0)+z.sales;t.c[r.category]=(t.c[r.category]||0)+z.sales});return t}
 function tab(n){if(!$(n))n='sales';flush();ui.tab=n;saveUI();document.querySelectorAll('.nav-btn').forEach(x=>{let on=x.dataset.tab===n;x.classList.toggle('active',on);if(on)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')});document.querySelectorAll('.tab-section').forEach(x=>x.classList.toggle('active',x.id===n));if(n==='sales')sales();if(n==='products')prod();if(n==='reports')reports();if(n==='analytics')analytics()}
@@ -52,6 +92,9 @@ function save(){let d=$('businessDate').value||today();rows=rows.map(r=>({...r,c
 function importX(){let f=$('excelFile').files[0];if(!f){toast('Select a file first');return}if(typeof XLSX==='undefined'&&!/\.csv$/i.test(f.name)){toast('Excel reader unavailable. Use CSV or refresh the page.');return}let rd=new FileReader();rd.onload=e=>{try{let data;if(typeof XLSX!=='undefined'){let w=XLSX.read(e.target.result,{type:'array'});data=XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,defval:''})}else{let text=new TextDecoder().decode(new Uint8Array(e.target.result));data=text.split(/\r?\n/).filter(Boolean).map(line=>line.split(',').map(x=>x.trim().replace(/^"|"$/g,'')))}if(data.length<2)throw Error('No product rows found');let h=data[0].map(x=>String(x).trim().toLowerCase().replace(/[_-]+/g,' ')),ix=(...ks)=>{for(const k of ks){const i=h.indexOf(k);if(i>=0)return i}return -1},ci=ix('category'),pi=ix('product','product name','item'),si=ix('sku','code','product code'),pr=ix('unit price','price','selling price'),oi=ix('opening stock','opening','stock');if([ci,pi,pr,oi].some(x=>x<0))throw Error('Required columns: Category, Product, Unit Price, Opening Stock');let count=0;data.slice(1).forEach(r=>{let name=String(r[pi]||'').trim();if(!name)return;let sku=String(si>=0?r[si]:'').trim(),p=(sku&&products.find(x=>x.id===sku))||products.find(x=>x.name.toLowerCase()===name.toLowerCase());if(p){p.category=normalize(r[ci]);p.name=name;p.price=num(r[pr]);p.opening=num(r[oi])}else products.push({id:sku||'P-'+Date.now()+'-'+count,category:normalize(r[ci]),name,price:num(r[pr]),opening:num(r[oi])});count++});write(S.p,products);prod();sales();$('importMessage').textContent=count+' product(s) imported successfully.';toast('Import complete')}catch(err){$('importMessage').textContent='Import failed: '+err.message}};rd.readAsArrayBuffer(f)}
 function normalize(x){x=String(x||'').trim().toLowerCase();return x==='drink'||x==='drinks'?'Drinks':x==='snack'||x==='snacks'?'Snacks':x==='bread'?'Bread':x==='akara'||x==='akaras'||x==="akara's"?'Akara':x?x.replace(/\b\w/g,c=>c.toUpperCase()):'Other'}
 function bind(){
+window.DelCravingsCloudSync=cloudPush;
+window.DelCravingsPull=cloudPull;
+
 $('businessDate').value=ui.date||today();$('reportFrom').value=ui.from||today();$('reportTo').value=ui.to||today();$('salesSearch').value=ui.search||'';
 navigator.storage?.persist?.().catch(()=>{});
 const leave=()=>flush();window.addEventListener('pagehide',leave);window.addEventListener('beforeunload',leave);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush()});
@@ -83,7 +126,9 @@ $('importBtn').addEventListener('click',importX);$('downloadTemplateBtn').addEve
 $('logoutBtn').addEventListener('click',()=>{flush();sessionStorage.removeItem('dc_logged_in');location.reload()});
 $('saveSettingsBtn').addEventListener('click',()=>{let u=$('newUser').value.trim(),p=$('newPin').value.trim(),c=$('confirmPin').value.trim();if(!u||!p)return $('settingsMessage').textContent='Username and PIN are required.';if(p.length<4)return $('settingsMessage').textContent='PIN must be at least 4 characters.';if(p!==c)return $('settingsMessage').textContent='PIN confirmation does not match.';if(!write(S.a,{username:u,pin:p}))return $('settingsMessage').textContent='Could not save settings.';$('newPin').value='';$('confirmPin').value='';$('userDisplay').textContent='Signed in: '+u;$('settingsMessage').textContent='Login settings saved.';toast('Settings saved')});
 $('resetDataBtn').addEventListener('click',()=>{if(!confirm('Reset all products and saved reports? This cannot be undone. Export CSV first if you need a backup.'))return;clearTimeout(saveTimer);dirty={d:false,p:false};products=D.map(x=>({...x}));days={};ui.edit=null;saveUI();write(S.p,products);write(S.d,days);status('All changes saved','saved');prod();sales();reports();analytics();toast('Data reset')});
-let a=auth();$('userDisplay').textContent='Signed in: '+a.username;$('newUser').value=a.username;prod();sales();reports();analytics();if(ui.tab&&ui.tab!=='sales')tab(ui.tab);status('All changes saved','saved');
+let a=auth();$('userDisplay').textContent='Signed in: '+a.username;
+setTimeout(cloudPull,250);
+$('newUser').value=a.username;prod();sales();reports();analytics();if(ui.tab&&ui.tab!=='sales')tab(ui.tab);status('All changes saved','saved');
 }
 function dmy(){let p=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');document.querySelectorAll('input[type="date"]').forEach(i=>{if(i.dataset.dmy)return;i.dataset.dmy='1';let w=document.createElement('span'),t=document.createElement('span');w.className='dmy';t.className='dmy-text';t.setAttribute('aria-hidden','true');i.before(w);w.append(i,t);let up=()=>{let v=p.get.call(i);t.textContent=v?fd(v):'dd/mm/yyyy';t.classList.toggle('empty',!v)};Object.defineProperty(i,'value',{configurable:true,get(){return p.get.call(this)},set(v){p.set.call(this,v);up()}});i.addEventListener('input',up);i.addEventListener('change',up);up()})}
 function boot(){dmy();if(sessionStorage.getItem('dc_logged_in')==='1'){$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');bind()}};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
