@@ -93,6 +93,7 @@ function importX(){let f=$('excelFile').files[0];if(!f){toast('Select a file fir
 function normalize(x){x=String(x||'').trim().toLowerCase();return x==='drink'||x==='drinks'?'Drinks':x==='snack'||x==='snacks'?'Snacks':x==='bread'?'Bread':x==='akara'||x==='akaras'||x==="akara's"?'Akara':x?x.replace(/\b\w/g,c=>c.toUpperCase()):'Other'}
 function bind(){
 window.DelCravingsCloudSync=cloudPush;
+const creditScript=document.createElement('script');creditScript.src='/debtors.js';creditScript.defer=true;document.head.appendChild(creditScript);
 window.DelCravingsPull=cloudPull;
 
 $('businessDate').value=ui.date||today();$('reportFrom').value=ui.from||today();$('reportTo').value=ui.to||today();$('salesSearch').value=ui.search||'';
