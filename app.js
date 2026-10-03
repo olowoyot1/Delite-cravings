@@ -59,7 +59,7 @@ async function cloudPull(){
       sales();prod();reports();analytics();
       if(window.DelCravingsRefreshCredit)window.DelCravingsRefreshCredit();
       status('Cloud data loaded','saved');
-    }else{cloudReady=true;await cloudPush()}
+    }else{cloudReady=true;cloudPulling=false;await cloudPush();cloudPulling=true}
   }catch(e){console.warn('Cloud load unavailable:',e);status('Local mode — configure cloud database','error')}
   finally{cloudPulling=false}
 }
